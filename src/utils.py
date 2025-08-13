@@ -5,6 +5,7 @@ import pickle
 from src.exception import CustomException
 
 from sklearn.metrics import r2_score
+from sklearn.model_selection import GridSearchCV
 
 def save_object(file_path,obj):
     try:
@@ -17,7 +18,7 @@ def save_object(file_path,obj):
         raise CustomException(e,sys)
 
 
-def evaluate_models(X_train,y_train,X_test,y_test,models):
+def evaluate_models(X_train,y_train,X_test,y_test,models,params):
     try:
         report={}
         model_names=list(models.keys())
@@ -27,6 +28,14 @@ def evaluate_models(X_train,y_train,X_test,y_test,models):
            
            model_name=model_names[i]
            model=model_values[i]
+
+           param_grid=params.get(model_name,{})  #if we have empty params it will auto matically assing {} to param_grid
+
+           if param_grid:
+            gs=GridSearchCV(model,param_grid,cv=3)
+            gs.fit(X_train,y_train)
+
+            model.set_params(**gs.best_params_)  #seting the model for best parameters
 
            model.fit(X_train,y_train)  #train model
            y_train_pred=model.predict(X_train)
